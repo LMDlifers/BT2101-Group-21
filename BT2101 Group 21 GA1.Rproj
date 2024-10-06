@@ -1,13 +1,187 @@
-Version: 1.0
+install.packages("dplyr")
+install.packages("Wooldridge")
 
-RestoreWorkspace: Default
-SaveWorkspace: Default
-AlwaysSaveHistory: Default
+data(package = "wooldridge")
+data("discrim", package = "wooldridge")
 
-EnableCodeIndexing: Yes
-UseSpacesForTab: Yes
-NumSpacesForTab: 4
-Encoding: UTF-8
+# quick peek on data
+selected_data <- discrim[, c("prpblck", "income")]
+head(selected_data)
+summary(selected_data)
 
-RnwWeave: Sweave
-LaTeX: pdfLaTeX
+# remarks for discussion
+# prpblck has multiple 0s, shows error if NA is unremoved
+# avg_income shows error if NA is unremoved
+# include all variables for f)
+
+# a) Sample means and std dev ofr prpblck and income
+
+avg_prpblck <- mean(discrim$prpblck, na.rm = TRUE)
+avg_prpblck
+
+avg_income <- mean(discrim$income, na.rm = TRUE)
+avg_income
+
+std_prpblck <- sd(discrim$prpblck, na.rm = TRUE)
+std_prpblck
+
+std_income <- sd(discrim$income, na.rm = TRUE)
+std_income
+
+# b linear model
+
+model <- lm(psoda ~ prpblck, data = discrim)
+summary(model)
+
+"The linear model generated a coefficient of 0.06493 for prpblck, 
+with a p-value of 0.00702, which is statistically significant at the 99% confidence level. 
+This suggests that the relationship between prpblck and psoda is unlikely to be due to random chance, 
+indicating a meaningful association between the two variables. 
+Specifically, for every 1-unit increase in the proportion of the black population (prpblck), 
+the price of soda (psoda) increases by approximately $0.06493.Thus, prpblck is
+worth evaluating further."
+
+
+# c) 
+
+"While this relationship is statistically significant,
+the model does not account for potential confounding factors, selection bias, 
+potential reverse causality nor establish a direct causal mechanism. Hence, we are unable unable to make 
+a causal claims with a high degree of confidence with the current model as the
+current threats to the experiment's internal validity can produce biased estimates
+that can lead to a misrepresentation of the true effects of prpblck on psoda.
+"
+
+# d)
+
+"The following variables could be potential omitted confounders:"
+
+"
+Income Levels (income):
+
+Rationale: Higher income areas might have higher prices due to greater purchasing power, 
+independent of racial demographics. If prpblck is correlated with lower income levels, 
+this could confound the observed relationship between prpblck and psoda.
+"
+
+"
+Poverty Levels (prppov):
+
+Rationale: Poverty levels could affect both the pricing of products 
+(due to economic conditions in poorer neighborhoods) and 
+the racial composition of an area. Higher poverty rates might 
+lead to lower prices if stores adjust prices to cater to 
+local economic conditions. 
+Failure to control for poverty could lead to omitted variable bias.
+"
+
+"
+Population Density (density):
+
+Rationale: Urban areas with higher population density often have 
+higher prices due to increased demand and competition. 
+If urban areas also have higher proportions of black residents, 
+population density could confound the relationship.
+"
+
+"
+Crime Rate (crmrte):
+
+Rationale: Areas with higher crime rates might face higher operating costs 
+for businesses, which could lead to higher prices. If these areas 
+also have a higher proportion of black residents, 
+crime rates could be a confounder.
+"
+
+
+" Housing Values (hseval):
+
+Rationale: The cost of living, including housing prices, 
+often reflects the economic conditions of an area. 
+Higher housing values might lead to higher overall prices for goods, 
+including soda. Housing values could be correlated with both 
+racial demographics and soda prices, making it an important confounder.
+"
+
+"
+Cultural factors:
+Cultural factors such as community norms can influence both the pricing strategies
+and the racial composition of an area"
+
+"
+Store-specific policies:
+Stores may set different prices based on qualitative and subjective factors.
+"
+
+# e)
+
+"
+All forementioned variables; income, prppov, density, crmrte, hseval can measured
+and are available in the dataset.
+
+However, cultural factors and store-specific policies are not available in the datset,
+due to their nature of being challenging to quantify into a dataset.
+
+Potential proxies for these factors can include using ethnic diversity 
+or language being spoken at home and identifying the type of chain such 
+as company-owned vs franchies which offers more 
+insights on how pricing strategies are applied at more domestic level.These variables
+are then evaluated in binaries (e.g 1 or 0).
+
+"
+
+# f)
+
+model2 <- lm(psoda ~ prpblck + income + prppov + density + crmrte + hseval + prpncar + chain, data = discrim)
+
+
+# lm model
+# prpblck coeff 0.06493
+# R^2 = 0.0108
+# Adj R^2 = 0.01561
+
+summary(model)
+
+# lm model2
+# prpblck coeff 1.092e-01
+# R^2 = 0.2076
+# Adj R^2 = 0.1914
+
+summary(model2)
+
+
+# Change in prpblck coeff
+
+"
+The coefficient for prpblck has increased from 0.06493 to 0.1092, 
+which means that after controlling for confounding variables, 
+the effect of the proportion of the black population on soda prices has become stronger. 
+This suggests that once other factors (like income, poverty levels, and housing values) 
+are taken into account, 
+the relationship between prpblck and psoda becomes more pronounced.
+Furthermore, the p-value has also decrease, making the R/S even more statistically
+significant.
+"
+
+# Change in R^2 and Adj R^2
+
+"
+The R-squared and Adjusted R-squared values have increased substantially in model2 
+(from 0.01808 to 0.2076 for Multiple R-squared, and from 0.01561 to 0.1914 for Adjusted R-squared). 
+This indicates that the new model with the additional confounding variables 
+explains a much larger proportion of the variance in soda prices. 
+In other words, this model fits the data much better.
+"
+
+# Overall new interpretation
+
+"
+After controlling for the forementioned confounders, prpblck has a strong
+and statistically significant positive effect on soda prices. Specifically, for 
+every one unit increase in prpblck, soda prices increase by approx $0.1092 in 
+contrast to the previous model's of $0.06493. Even after accounting for all the
+the previously omitted confounders, prpblck still has a significant impact on psoda.
+All in all, including the omitted confounders improved the model's explanatory 
+power, indicating that these factors are imperative to understand how soda 
+prices are set.
+"
